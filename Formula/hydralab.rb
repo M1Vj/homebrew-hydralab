@@ -3,8 +3,8 @@ class Hydralab < Formula
 
   desc "Offline-first, local research workbench with research agents"
   homepage "https://github.com/M1Vj/HydraLab"
-  url "https://github.com/M1Vj/HydraLab/releases/download/v0.1.0/hydralab-0.1.0.tar.gz"
-  sha256 "ac87674b3e6b67be76a5e2d05c526779516c566a401930ccbbd43854811e7e09"
+  url "https://github.com/M1Vj/HydraLab/releases/download/v1.0.0/hydralab-1.0.0.tar.gz"
+  sha256 "844e620412d2fb337d804733b011f1df065ee6ee0a6959f8dc0077e322f6ba49"
   license "MIT"
 
   depends_on "rust" => :build
