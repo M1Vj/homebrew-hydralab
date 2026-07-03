@@ -7,10 +7,11 @@ class Hydralab < Formula
   sha256 "ac87674b3e6b67be76a5e2d05c526779516c566a401930ccbbd43854811e7e09"
   license "MIT"
 
-  depends_on "python@3.12"
-  depends_on "rust" => :build      # builds pydantic-core and watchfiles from sdist
-  depends_on "libxml2"             # lxml (python-docx)
+  depends_on "rust" => :build
+  depends_on "libxml2"
   depends_on "libxslt"
+  depends_on "libyaml"
+  depends_on "python@3.12"
 
   resource "aiosqlite" do
     url "https://files.pythonhosted.org/packages/4e/8a/64761f4005f17809769d23e518d915db74e6310474e733e3593cfc854ef1/aiosqlite-0.22.1.tar.gz"
