@@ -6,12 +6,44 @@ class Hydralab < Formula
   url "https://github.com/M1Vj/HydraLab/releases/download/v1.0.0/hydralab-1.0.0.tar.gz"
   sha256 "844e620412d2fb337d804733b011f1df065ee6ee0a6959f8dc0077e322f6ba49"
   license "MIT"
+  revision 1
 
   depends_on "rust" => :build
   depends_on "libxml2"
   depends_on "libxslt"
   depends_on "libyaml"
   depends_on "python@3.12"
+
+  on_linux do
+    depends_on "pkgconf" => :build
+    depends_on "libffi"
+    depends_on "openssl@3"
+
+    resource "cffi" do
+      url "https://files.pythonhosted.org/packages/eb/56/b1ba7935a17738ae8453301356628e8147c79dbb825bcbc73dc7401f9846/cffi-2.0.0.tar.gz"
+      sha256 "44d1b5909021139fe36001ae048dbdde8214afa20200eda0f64c068cac5d5529"
+    end
+
+    resource "cryptography" do
+      url "https://files.pythonhosted.org/packages/9d/af/182eb91b0df3fe75c4d9f26fe70684569566745f6ba7e5c9c73a862c5252/cryptography-50.0.2.tar.gz"
+      sha256 "7b46165bb56eb4704e2eaaf86f3c940d19154535d9b0ca7d6d590b04060e00d5"
+    end
+
+    resource "jeepney" do
+      url "https://files.pythonhosted.org/packages/7b/6f/357efd7602486741aa73ffc0617fb310a29b588ed0fd69c2399acbb85b0c/jeepney-0.9.0.tar.gz"
+      sha256 "cf0e9e845622b81e4a28df94c40345400256ec608d0e55bb8a3feaa9163f5732"
+    end
+
+    resource "pycparser" do
+      url "https://files.pythonhosted.org/packages/1b/7d/92392ff7815c21062bea51aa7b87d45576f649f16458d78b7cf94b9ab2e6/pycparser-3.0.tar.gz"
+      sha256 "600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29"
+    end
+
+    resource "secretstorage" do
+      url "https://files.pythonhosted.org/packages/1c/03/e834bcd866f2f8a49a85eaff47340affa3bfa391ee9912a952a1faa68c7b/secretstorage-3.5.0.tar.gz"
+      sha256 "f04b8e4689cbce351744d5537bf6b1329c6fc68f91fa666f60a380edddcd11be"
+    end
+  end
 
   resource "aiosqlite" do
     url "https://files.pythonhosted.org/packages/4e/8a/64761f4005f17809769d23e518d915db74e6310474e733e3593cfc854ef1/aiosqlite-0.22.1.tar.gz"
@@ -269,5 +301,37 @@ class Hydralab < Formula
 
   test do
     assert_match "usage", shell_output("#{bin}/hydralab --help")
+
+    # Check Linux keyring dependencies without opening a keyring or D-Bus session.
+    if OS.linux?
+      system libexec/"bin/python", "-I", "-c", <<~PYTHON
+        from importlib.metadata import distribution, version
+        from pathlib import Path
+        import sys
+
+        from packaging.requirements import Requirement
+        from packaging.utils import canonicalize_name
+
+        pending = ["keyring"]
+        checked = set()
+        venv = Path(sys.prefix).resolve()
+        while pending:
+            name = pending.pop()
+            normalized = canonicalize_name(name)
+            if normalized in checked:
+                continue
+            installed = distribution(name)
+            location = Path(installed.locate_file("")).resolve()
+            assert location.is_relative_to(venv), f"{name} is outside the virtualenv: {location}"
+            checked.add(normalized)
+            for value in installed.requires or []:
+                requirement = Requirement(value)
+                if requirement.marker and not requirement.marker.evaluate({"extra": ""}):
+                    continue
+                actual = version(requirement.name)
+                assert actual in requirement.specifier, f"{requirement}: installed {actual}"
+                pending.append(requirement.name)
+      PYTHON
+    end
   end
 end
